@@ -27,7 +27,9 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("support-bot")
 
-app = Flask(__name__)  # Vercel looks for this exact variable name: `app`
+@app.route("/")
+def index():
+    return app.send_static_file("index.html")
 
 # ---------------------------------------------------------------------------
 # Configuration (env vars locally via .env, or Vercel Project Settings)
