@@ -1,21 +1,3 @@
-"""
-Customer Support Chatbot - Backend
------------------------------------
-Flask app that calls Hugging Face's OpenAI-compatible Inference Providers
-router. Deployable as-is to Vercel (zero-config: Vercel detects the `app`
-variable at the project root) and also runnable locally.
-
-Local run:
-    pip install -r requirements.txt
-    cp .env.example .env   # fill in HF_API_KEY
-    python app.py
-
-Vercel:
-    Just push this repo and import it in Vercel - no vercel.json needed.
-    Set HF_API_KEY / HF_MODEL / COMPANY_NAME as Environment Variables in
-    the Vercel project settings (Project -> Settings -> Environment Variables).
-"""
-
 import os
 import logging
 from flask import Flask, request, jsonify
@@ -27,19 +9,14 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("support-bot")
 
-@app.route("/")
-def index():
-    return app.send_static_file("index.html")
+app = Flask(__name__, static_folder="public", static_url_path="")
 
-# ---------------------------------------------------------------------------
-# Configuration (env vars locally via .env, or Vercel Project Settings)
-# ---------------------------------------------------------------------------
 HF_API_KEY = os.getenv("HF_API_KEY")
 HF_MODEL = os.getenv("HF_MODEL", "meta-llama/Llama-3.1-8B-Instruct:novita")
 COMPANY_NAME = os.getenv("COMPANY_NAME", "Our Company")
 
 if not HF_API_KEY:
-    logger.warning("HF_API_KEY is not set. Set it in .env locally or in Vercel env vars.")
+    logger.warning("HF_API_KEY is not set. Set it in .env locally or in Render env vars.")
 
 client = OpenAI(
     base_url="https://router.huggingface.co/v1",
@@ -61,6 +38,11 @@ say so honestly and offer to escalate to a human agent.
 MAX_HISTORY_MESSAGES = 20
 
 
+@app.route("/")
+def index():
+    return app.send_static_file("index.html")
+
+
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
@@ -72,7 +54,7 @@ def chat():
 
     if not HF_API_KEY:
         return jsonify({
-            "error": "Server is missing HF_API_KEY. Set it in Vercel Project Settings > Environment Variables."
+            "error": "Server is missing HF_API_KEY. Set it in Render Environment Variables."
         }), 500
 
     trimmed_history = history[-MAX_HISTORY_MESSAGES:]
@@ -90,7 +72,7 @@ def chat():
         )
         reply = completion.choices[0].message.content
         return jsonify({"reply": reply})
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception("HF chat completion failed")
         return jsonify({"error": f"Upstream error: {exc}"}), 502
 
