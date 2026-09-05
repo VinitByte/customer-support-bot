@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Customer Support Chat</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --accent: #4f9dff;
+    --accent-2: #2dd4bf;
+    --text: #e8eaed;
+    --text-dim: #93989f;
+    --bubble-user: #4f9dff;
+    --bubble-bot: #232733;
+    --border: #2a2f3a;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 20% 20%, #1a1f2b 0%, var(--bg) 60%);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text);
+  }
+
+  .chat-app {
+    width: 420px;
+    max-width: 95vw;
+    height: 640px;
+    max-height: 92vh;
+    background: var(--panel);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  }
+
+  .chat-header {
+    padding: 18px 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .chat-header .avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .chat-header .title { font-weight: 600; font-size: 15px; color: #0b0e14; }
+  .chat-header .subtitle { font-size: 12px; color: #0b0e14; opacity: 0.75; }
+
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #16c784; display: inline-block; margin-right: 6px;
+  }
+
+  .chat-body {
+    flex: 1;
+    padding: 18px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .chat-body::-webkit-scrollbar { width: 6px; }
+  .chat-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    animation: pop 0.15s ease-out;
+  }
+
+  @keyframes pop {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.bot {
+    align-self: flex-start;
+    background: var(--bubble-bot);
+    border-bottom-left-radius: 4px;
+    color: var(--text);
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    background: var(--bubble-user);
+    border-bottom-right-radius: 4px;
+    color: #06101f;
+  }
+
+  .msg.error {
+    align-self: center;
+    background: #3a1f22;
+    color: #ff9a9a;
+    border: 1px solid #5c2b2f;
+    font-size: 13px;
+  }
+
+  .typing {
+    align-self: flex-start;
+    display: flex;
+    gap: 4px;
+    padding: 12px 14px;
+    background: var(--bubble-bot);
+    border-radius: 14px;
+    border-bottom-left-radius: 4px;
+  }
+
+  .typing span {
+    width: 6px; height: 6px;
+    background: var(--text-dim);
+    border-radius: 50%;
+    animation: blink 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
+  }
+
+  .chat-footer {
+    padding: 14px;
+    border-top: 1px solid var(--border);
+    background: var(--panel-2);
+    display: flex;
+    gap: 10px;
+  }
+
+  #userInput {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+  }
+
+  #userInput:focus { border-color: var(--accent); }
+
+  #sendBtn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: none;
+    border-radius: 12px;
+    padding: 0 18px;
+    color: #06101f;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: opacity 0.15s;
+  }
+
+  #sendBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #sendBtn:hover:not(:disabled) { opacity: 0.9; }
+
+  .config-note {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 6px 10px 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="chat-app">
+  <div class="chat-header">
+    <div class="avatar">🤖</div>
+    <div>
+      <div class="title">Support Assistant</div>
+      <div class="subtitle"><span class="status-dot"></span>Online</div>
+    </div>
+  </div>
+
+  <div class="chat-body" id="chatBody">
+    <div class="msg bot">Hi! 👋 I'm your support assistant. How can I help you today?</div>
+  </div>
+
+  <div class="chat-footer">
+    <textarea id="userInput" rows="1" placeholder="Type your message..."></textarea>
+    <button id="sendBtn">Send</button>
+  </div>
+  <div class="config-note">Backend: <code id="backendUrlLabel"></code></div>
+</div>
+
+<script>
+  // On Vercel (or any same-origin deployment) this hits /api/chat automatically.
+  // When opened directly as a local file (file://), it falls back to localhost:5000.
+  const BACKEND_URL = (window.location.protocol === "file:")
+    ? "http://localhost:5000/api/chat"
+    : "/api/chat";
+  document.getElementById("backendUrlLabel").textContent = BACKEND_URL;
+
+  const chatBody = document.getElementById("chatBody");
+  const userInput = document.getElementById("userInput");
+  const sendBtn = document.getElementById("sendBtn");
+
+  // Conversation history sent to backend for context (role/content pairs)
+  let history = [];
+
+  function addMessage(text, role) {
+    const div = document.createElement("div");
+    div.className = `msg ${role}`;
+    div.textContent = text;
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    return div;
+  }
+
+  function showTyping() {
+    const div = document.createElement("div");
+    div.className = "typing";
+    div.id = "typingIndicator";
+    div.innerHTML = "<span></span><span></span><span></span>";
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function hideTyping() {
+    const el = document.getElementById("typingIndicator");
+    if (el) el.remove();
+  }
+
+  async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    addMessage(text, "user");
+    history.push({ role: "user", content: text });
+    userInput.value = "";
+    autoResize();
+    sendBtn.disabled = true;
+    showTyping();
+
+    try {
+      const res = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          history: history.slice(0, -1), // history BEFORE this new message
+        }),
+      });
+
+      const data = await res.json();
+      hideTyping();
+
+      if (!res.ok) {
+        addMessage(data.error || "Something went wrong. Please try again.", "error");
+        return;
+      }
+
+      addMessage(data.reply, "bot");
+      history.push({ role: "assistant", content: data.reply });
+    } catch (err) {
+      hideTyping();
+      addMessage("Couldn't reach the server. Is the backend running?", "error");
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  function autoResize() {
+    userInput.style.height = "auto";
+    userInput.style.height = Math.min(userInput.scrollHeight, 100) + "px";
+  }
+
+  userInput.addEventListener("input", autoResize);
+  userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+  sendBtn.addEventListener("click", sendMessage);
+</script>
+
+</body>
+</html>
